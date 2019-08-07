@@ -17,27 +17,36 @@ class RemoteFeedLoader {
     }
     
     func load() {
-        HTTPClient.shared.requestedURL = URL(string: "https://a-url.com")
+        client.execute(url: URL(string: "https://a-url.com")!)
     }
 }
 
-class HTTPClient {
-    static let shared = HTTPClient()
-    var requestedURL: URL?
+protocol HTTPClient {
+    func execute(url: URL)
 }
 
 class RemoteFeedLoaderTests: XCTestCase {
 
     func test_init_doesNotRequestData() {
-        let client = HTTPClient.shared
+        let client = HTTPClientSpy()
         _ = RemoteFeedLoader(client: client)
         XCTAssertNil(client.requestedURL)
     }
     
     func test_load_requestedDataFromURL() {
-        let client = HTTPClient.shared
+        let client = HTTPClientSpy()
         let sut = RemoteFeedLoader(client: client)
         sut.load()
         XCTAssertNotNil(client.requestedURL)
+    }
+    
+    // MARK: - Helpers
+    
+    private class HTTPClientSpy: HTTPClient {
+        var requestedURL: URL?
+        
+        func execute(url: URL) {
+            requestedURL = url
+        }
     }
 }
