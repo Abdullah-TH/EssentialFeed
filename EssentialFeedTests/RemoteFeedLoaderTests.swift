@@ -59,15 +59,19 @@ class RemoteFeedLoaderTests: XCTestCase {
         })
     }
     
+    func test_load_deliversNoItemsOn200HTTPStatusCodeWithEmptyJSONList() {
+        
+    }
+    
     // MARK: - Helpers
     
     private func expect(_ remoteFeedLoader: RemoteFeedLoader, toCompleteWithError error: RemoteFeedLoader.Error, when action: () -> Void, file: StaticString = #file, line: UInt = #line) {
-        var capturedErrors = [RemoteFeedLoader.Error]()
+        var capturedResults = [RemoteFeedLoader.Result]()
         remoteFeedLoader.load() { error in
-            capturedErrors.append(error)
+            capturedResults.append(error)
         }
         action()
-        XCTAssertEqual(capturedErrors, [error], file: file, line: line)
+        XCTAssertEqual(capturedResults, [.failure(error)], file: file, line: line)
     }
     
     private class HTTPClientSpy: HTTPClient {
