@@ -58,27 +58,22 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getFromURL_failsOnRequestError() {
-        let error = NSError(domain: "any error", code: 1, userInfo: nil)
-        let recievedError = resultForError(data: nil, response: nil, error: error)
-        XCTAssertTrue(recievedError as NSError? == error)
+        let requestError = anyNSError()
+        let recievedError = resultForError(data: nil, response: nil, error: requestError)
+        XCTAssertTrue(recievedError as NSError? == requestError)
     }
     
     func test_getFromURL_failsOnAllInvalidCases() {
-        let anyData = Data("any data".utf8)
-        let anyError = NSError(domain: "any error", code: 0, userInfo: nil)
-        let nonHTTPResponse = URLResponse(url: anyURL(), mimeType: nil, expectedContentLength: 0, textEncodingName: nil)
-        let anyHTTPURLResponse = HTTPURLResponse(url: anyURL(), statusCode: 200, httpVersion: nil, headerFields: nil)!
-        
         XCTAssertNotNil(resultForError(data: nil, response: nil, error: nil))
-        XCTAssertNotNil(resultForError(data: nil, response: nonHTTPResponse, error: nil))
-        XCTAssertNotNil(resultForError(data: nil, response: anyHTTPURLResponse, error: nil))
-        XCTAssertNotNil(resultForError(data: anyData, response: nil, error: nil))
-        XCTAssertNotNil(resultForError(data: anyData, response: nil, error: anyError))
-        XCTAssertNotNil(resultForError(data: nil, response: nonHTTPResponse, error: anyError))
-        XCTAssertNotNil(resultForError(data: nil, response: anyHTTPURLResponse, error: anyError))
-        XCTAssertNotNil(resultForError(data: anyData, response: nonHTTPResponse, error: anyError))
-        XCTAssertNotNil(resultForError(data: anyData, response: anyHTTPURLResponse, error: anyError))
-        XCTAssertNotNil(resultForError(data: anyData, response: nonHTTPResponse, error: nil))
+        XCTAssertNotNil(resultForError(data: nil, response: nonHTTPURLResponse(), error: nil))
+        XCTAssertNotNil(resultForError(data: nil, response: anyHTTPURLResponse(), error: nil))
+        XCTAssertNotNil(resultForError(data: anyData(), response: nil, error: nil))
+        XCTAssertNotNil(resultForError(data: anyData(), response: nil, error: anyNSError()))
+        XCTAssertNotNil(resultForError(data: nil, response: nonHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultForError(data: nil, response: anyHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultForError(data: anyData(), response: nonHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultForError(data: anyData(), response: anyHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultForError(data: anyData(), response: nonHTTPURLResponse(), error: nil))
     }
     
     
@@ -88,6 +83,26 @@ class URLSessionHTTPClientTests: XCTestCase {
         let sut = URLSessionHTTPClient()
         trackForMemoryLeaks(instance: sut, file: file, line: line)
         return sut
+    }
+    
+    private func anyURL() -> URL {
+        return URL(string: "http://aurl.com")!
+    }
+    
+    private func anyData() -> Data {
+        return Data("any data".utf8)
+    }
+    
+    private func anyNSError() -> NSError {
+        return NSError(domain: "any error", code: 0, userInfo: nil)
+    }
+    
+    private func anyHTTPURLResponse() -> HTTPURLResponse {
+        return HTTPURLResponse(url: anyURL(), statusCode: 200, httpVersion: nil, headerFields: nil)!
+    }
+    
+    private func nonHTTPURLResponse() -> URLResponse {
+        return URLResponse(url: anyURL(), mimeType: nil, expectedContentLength: 0, textEncodingName: nil)
     }
     
     private func resultForError(data: Data?, response: URLResponse?, error: Error?) -> Error? {
@@ -107,10 +122,6 @@ class URLSessionHTTPClientTests: XCTestCase {
         
         wait(for: [exp], timeout: 1.0)
         return recievedError
-    }
-    
-    private func anyURL() -> URL {
-        return URL(string: "http://aurl.com")!
     }
     
     private class URLProtocolStub: URLProtocol {
