@@ -19,10 +19,10 @@ final class FeedItemMapper {
     }
     
     private struct Item: Decodable {
-        public let id: UUID
-        public let description: String?
-        public let location: String?
-        public let image: URL
+        let id: UUID
+        let description: String?
+        let location: String?
+        let image: URL
         
         var feedItem: FeedItem {
             return FeedItem(
@@ -37,9 +37,10 @@ final class FeedItemMapper {
     
     static func map(data: Data, response: HTTPURLResponse) -> RemoteFeedLoader.Result {
         
-        guard response.statusCode == http200StatusCode,
-              let root = try? JSONDecoder().decode(Root.self, from: data) else {
-            return .failure(RemoteFeedLoader.Error.invalidData)
+        guard
+            response.statusCode == http200StatusCode,
+            let root = try? JSONDecoder().decode(Root.self, from: data) else {
+                return .failure(RemoteFeedLoader.Error.invalidData)
         }
         
         return .success(root.feedItems)
