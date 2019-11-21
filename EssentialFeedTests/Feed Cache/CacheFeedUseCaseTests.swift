@@ -78,12 +78,12 @@ class CacheFeedUseCaseTests: XCTestCase {
         var sut: LocalFeedLoader? = LocalFeedLoader(store: store, currentDate: Date())
         let deletionError = anyNSError()
         
-        var recievedError: Error?
-        sut?.save([uniqueItem()]) { recievedError = $0 }
+        var recievedResults = [LocalFeedLoader.SaveResult]()
+        sut?.save([uniqueItem()]) { recievedResults.append($0) }
         sut = nil
         store.completeDeletion(with: deletionError)
         
-        XCTAssertNil(recievedError)
+        XCTAssertTrue(recievedResults.isEmpty)
     }
     
     func test_save_doesNotDeliverInsertionErrorAfterSUTDeallocated() {
@@ -91,13 +91,13 @@ class CacheFeedUseCaseTests: XCTestCase {
         var sut: LocalFeedLoader? = LocalFeedLoader(store: store, currentDate: Date())
         let insertionError = anyNSError()
         
-        var recievedError: Error?
-        sut?.save([uniqueItem()]) { recievedError = $0 }
+        var recievedResults = [LocalFeedLoader.SaveResult]()
+        sut?.save([uniqueItem()]) { recievedResults.append($0) }
         store.completeDeletionSuccessfully()
         sut = nil
         store.completeInsertion(with: insertionError)
         
-        XCTAssertNil(recievedError)
+        XCTAssertTrue(recievedResults.isEmpty)
     }
     
     // MARK: - Helpers
@@ -163,13 +163,13 @@ class CacheFeedUseCaseTests: XCTestCase {
         when action: () -> ()
     ) {
         let exp = expectation(description: "Wait for save completion")
-        var recievedError: Error?
+        var recievedResults = [LocalFeedLoader.SaveResult]()
         sut.save([uniqueItem()]) { error in
-            recievedError = error
+            recievedResults.append(error)
             exp.fulfill()
         }
         action()
-        XCTAssertEqual(recievedError as NSError?, expectedError, file: file, line: line)
+        XCTAssertEqual(recievedResults.map { $0 as NSError? }, [expectedError], file: file, line: line)
         wait(for: [exp], timeout: 1.0)
     }
     
