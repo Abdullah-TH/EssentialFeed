@@ -19,12 +19,12 @@ class LocalFeedLoader {
         self.currentDate = currentDate
     }
     
-    func save(_ items: [FeedItem]) {
+    func save(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
         store.deleteCachedFeed { [unowned self] error in
             if error == nil {
                 self.store.insert(items, currentDate: self.currentDate)
             } else {
-                
+                completion(error)
             }
         }
     }
@@ -72,7 +72,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         let (sut, store) = makeSUT()
         let items = [uniqueItem(), uniqueItem()]
         
-        sut.save(items)
+        sut.save(items) { _ in }
         
         XCTAssertEqual(store.recievedMessages, [.deleteCachedFeed])
     }
@@ -82,7 +82,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         let items = [uniqueItem(), uniqueItem()]
         let deletionError = anyNSError()
         
-        sut.save(items)
+        sut.save(items) { _ in }
         store.completeDeletion(with: deletionError)
         
         XCTAssertEqual(store.recievedMessages, [.deleteCachedFeed])
@@ -93,10 +93,27 @@ class CacheFeedUseCaseTests: XCTestCase {
         let (sut, store) = makeSUT(currentDate: timestamp)
         let items = [uniqueItem(), uniqueItem()]
         
-        sut.save(items)
+        sut.save(items) { _ in }
         store.completeDeletionSuccessfully()
         
         XCTAssertEqual(store.recievedMessages, [.deleteCachedFeed, .insert(items: items, timestamp: timestamp)])
+    }
+    
+    func test_save_failsOnDeletionError() {
+        let (sut, store) = makeSUT()
+        let items = [uniqueItem(), uniqueItem()]
+        let deletionError = anyNSError()
+        let exp = expectation(description: "Wait for save completion")
+        
+        var recievedError: Error?
+        sut.save(items) { error in
+            recievedError = error
+            exp.fulfill()
+        }
+        store.completeDeletion(with: deletionError)
+        
+        XCTAssertEqual(recievedError as NSError?, deletionError)
+        wait(for: [exp], timeout: 1.0)
     }
     
     // MARK: - Helpers
