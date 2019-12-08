@@ -72,10 +72,10 @@ class LoadFeedFromRemoteUseCaseTests: XCTestCase {
         
         let (remoteFeedLoader, client) = makeSUT(url: URL(string: "http://aurl.com")!)
         
-        let item1 = makeItem(id: UUID(),
+        let item1 = makeImageFeed(id: UUID(),
                              imageURL: URL(string: "http://aurlofimage.com/image.jpg")!)
         
-        let item2 = makeItem(id: UUID(),
+        let item2 = makeImageFeed(id: UUID(),
                              description: "some description",
                              location: "some location",
                              imageURL: URL(string: "http://anotherimage.com/image.png")!)
@@ -169,14 +169,14 @@ class LoadFeedFromRemoteUseCaseTests: XCTestCase {
         return .failure(error)
     }
     
-    private func makeItem(
+    private func makeImageFeed(
         id: UUID,
         description: String? = nil,
         location: String? = nil,
         imageURL: URL
-        ) -> (model: FeedItem, json: [String: Any]) {
+        ) -> (model: FeedImage, json: [String: Any]) {
         
-        let item = FeedItem(id: id, description: description, location: location, imageURL: imageURL)
+        let item = FeedImage(id: id, description: description, location: location, url: imageURL)
         let itemJSON = [
             "id": id.uuidString,
             "description": description,
