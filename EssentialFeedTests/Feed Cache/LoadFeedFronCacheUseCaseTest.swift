@@ -17,6 +17,14 @@ class LoadFeedFronCacheUseCaseTest: XCTestCase {
         XCTAssertEqual(store.recievedMessages, [])
     }
     
+    func test_load_requestCacheRetrieval() {
+        let (sut, store) = makeSUT()
+        
+        sut.load()
+        
+        XCTAssertEqual(store.recievedMessages, [.retrieve])
+    }
+    
     private func makeSUT(
         currentDate: Date = Date(),
         file: StaticString = #file,
