@@ -11,8 +11,6 @@ import EssentialFeed
 
 class FeedStoreSpy: FeedStore {
     
-    typealias CompletionWithError = (Error?) -> Void
-    
     enum Message: Equatable {
         case deleteCachedFeed
         case insert(localFeed: [LocalFeedImage], timestamp: Date)
@@ -20,10 +18,11 @@ class FeedStoreSpy: FeedStore {
     }
     
     private(set) var recievedMessages = [Message]()
-    private var deletionCompletions = [CompletionWithError]()
-    private var insertionCompletions = [CompletionWithError]()
+    private var deletionCompletions = [DeletionCompletion]()
+    private var insertionCompletions = [InsertionCompletion]()
+    private var retrievalCompletions = [RetrievalCompletion]()
     
-    func deleteCachedFeed(completion: @escaping CompletionWithError) {
+    func deleteCachedFeed(completion: @escaping DeletionCompletion) {
         recievedMessages.append(.deleteCachedFeed)
         deletionCompletions.append(completion)
     }
@@ -36,7 +35,7 @@ class FeedStoreSpy: FeedStore {
         deletionCompletions[index](nil)
     }
     
-    func insert(_ localFeed: [LocalFeedImage], currentDate: Date, completion: @escaping CompletionWithError) {
+    func insert(_ localFeed: [LocalFeedImage], currentDate: Date, completion: @escaping InsertionCompletion) {
         recievedMessages.append(.insert(localFeed: localFeed, timestamp: currentDate))
         insertionCompletions.append(completion)
     }
@@ -49,7 +48,12 @@ class FeedStoreSpy: FeedStore {
         insertionCompletions[index](nil)
     }
     
-    func load() {
+    func load(completion: @escaping RetrievalCompletion) {
         recievedMessages.append(.retrieve)
+        retrievalCompletions.append(completion)
+    }
+    
+    func completeRetrieval(with error: Error?, at index: Int = 0) {
+        retrievalCompletions[index](error)
     }
 }

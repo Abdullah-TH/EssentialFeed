@@ -31,8 +31,8 @@ public final class LocalFeedLoader {
         }
     }
     
-    public func load() {
-        store.load()
+    public func load(completion: @escaping (Error?) -> Void) {
+        store.load(completion: completion)
     }
     
     private func cache(feed: [FeedImage], with completion: @escaping (Error?) -> Void) {
