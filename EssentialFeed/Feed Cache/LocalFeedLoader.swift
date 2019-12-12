@@ -33,10 +33,13 @@ public final class LocalFeedLoader {
     }
     
     public func load(completion: @escaping (LoadResult) -> Void) {
-        store.load { error in
-            if let error = error {
+        store.load { result in
+            switch result {
+            case let .failure(error):
                 completion(.failure(error))
-            } else {
+            case let .found(localFeed, _):
+                completion(.success(localFeed.toFeedImages()))
+            case .empty:
                 completion(.success([]))
             }
         }
@@ -54,6 +57,19 @@ private extension Array where Element == FeedImage {
     func toLocalFeedImages() -> [LocalFeedImage] {
         return self.map {
             LocalFeedImage(
+                id: $0.id,
+                description: $0.description,
+                location: $0.location,
+                url: $0.url
+            )
+        }
+    }
+}
+
+private extension Array where Element == LocalFeedImage {
+    func toFeedImages() -> [FeedImage] {
+        return self.map {
+            FeedImage(
                 id: $0.id,
                 description: $0.description,
                 location: $0.location,
