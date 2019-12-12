@@ -43,12 +43,24 @@ class LoadFeedFronCacheUseCaseTest: XCTestCase {
     }
     
     func test_load_deliversCachedFeedOnLessThanSevenDaysOldCache() {
-        let (sut, store) = makeSUT()
+        let fixedCurrentDate = Date()
+        let (sut, store) = makeSUT(currentDate: fixedCurrentDate)
         let feed = uniqueImageFeed()
-        let lessThanSevenDaysTimeStamp = Date().adding(days: -7).adding(seconds: 1)
+        let lessThanSevenDaysTimeStamp = fixedCurrentDate.adding(days: -7).adding(seconds: 1)
         
         expect(sut, toCompleteWith: .success(feed.imageFeed), when: {
             store.completeRetrieval(with: feed.localImageFeed, timestamp: lessThanSevenDaysTimeStamp)
+        })
+    }
+    
+    func test_load_deliversNoImagesOnSevenDaysOldCache() {
+        let fixedCurrentDate = Date()
+        let (sut, store) = makeSUT(currentDate: fixedCurrentDate)
+        let feed = uniqueImageFeed()
+        let sevenDaysTimeStamp = fixedCurrentDate.adding(days: -7)
+        
+        expect(sut, toCompleteWith: .success([]), when: {
+            store.completeRetrieval(with: feed.localImageFeed, timestamp: sevenDaysTimeStamp)
         })
     }
     
