@@ -51,8 +51,14 @@ public final class LocalFeedLoader {
     }
     
     public func validateCache() {
-        store.load { _ in }
-        store.deleteCachedFeed { _ in }
+        store.load { [unowned self] result in
+            switch result {
+            case .failure:
+                self.store.deleteCachedFeed { _ in }
+            default:
+                break
+            }
+        }
     }
     
     private func cache(feed: [FeedImage], with completion: @escaping (Error?) -> Void) {
