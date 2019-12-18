@@ -10,9 +10,6 @@ import Foundation
 
 public final class LocalFeedLoader {
     
-    public typealias SaveResult = Error?
-    public typealias LoadResult = LoadFeedResult
-    
     private let store: FeedStore
     private let currentDate: Date
     private let maxCacheAgeInDays = 7
@@ -20,31 +17,6 @@ public final class LocalFeedLoader {
     public init(store: FeedStore, currentDate: Date) {
         self.store = store
         self.currentDate = currentDate
-    }
-    
-    public func save(_ feed: [FeedImage], completion: @escaping (Error?) -> Void) {
-        store.deleteCachedFeed { [weak self] error in
-            guard let self = self else { return }
-            if let cacheDeletionError = error {
-                completion(cacheDeletionError)
-            } else {
-                self.cache(feed: feed, with: completion)
-            }
-        }
-    }
-    
-    public func load(completion: @escaping (LoadResult) -> Void) {
-        store.load { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case let .failure(error):
-                completion(.failure(error))
-            case let .found(localFeed, timestamp) where self.validate(timestamp):
-                completion(.success(localFeed.toFeedImages()))
-            case .found, .empty:
-                completion(.success([]))
-            }
-        }
     }
     
     public func validateCache() {
@@ -61,13 +33,6 @@ public final class LocalFeedLoader {
         }
     }
     
-    private func cache(feed: [FeedImage], with completion: @escaping (Error?) -> Void) {
-        store.insert(feed.toLocalFeedImages(), currentDate: self.currentDate) { [weak self] error in
-            guard self != nil else { return }
-            completion(error)
-        }
-    }
-    
     private func validate(_ timestamp: Date) -> Bool {
         guard let maxCacheAge = Calendar(identifier: .gregorian).date(byAdding: .day, value: maxCacheAgeInDays, to: timestamp) else {
             return false
@@ -76,6 +41,48 @@ public final class LocalFeedLoader {
     }
 }
 
+extension LocalFeedLoader {
+    
+    public typealias SaveResult = Error?
+    
+    public func save(_ feed: [FeedImage], completion: @escaping (Error?) -> Void) {
+        store.deleteCachedFeed { [weak self] error in
+            guard let self = self else { return }
+            if let cacheDeletionError = error {
+                completion(cacheDeletionError)
+            } else {
+                self.cache(feed: feed, with: completion)
+            }
+        }
+    }
+    
+    private func cache(feed: [FeedImage], with completion: @escaping (Error?) -> Void) {
+        store.insert(feed.toLocalFeedImages(), currentDate: self.currentDate) { [weak self] error in
+            guard self != nil else { return }
+            completion(error)
+        }
+    }
+}
+
+extension LocalFeedLoader {
+    
+    public typealias LoadResult = LoadFeedResult
+    
+    public func load(completion: @escaping (LoadResult) -> Void) {
+        store.load { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case let .failure(error):
+                completion(.failure(error))
+            case let .found(localFeed, timestamp) where self.validate(timestamp):
+                completion(.success(localFeed.toFeedImages()))
+            case .found, .empty:
+                completion(.success([]))
+            }
+        }
+    }
+}
+    
 private extension Array where Element == FeedImage {
     func toLocalFeedImages() -> [LocalFeedImage] {
         return self.map {
