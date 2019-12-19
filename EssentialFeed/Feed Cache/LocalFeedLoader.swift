@@ -10,31 +10,25 @@ import Foundation
 
 private final class FeedCachePolicy {
     
-    private let currentDate: Date
     private let maxCacheAgeInDays = 7
     
-    init(currentDate: Date) {
-        self.currentDate = currentDate
-    }
-    
-    func validate(_ timestamp: Date) -> Bool {
+    func validate(_ timestamp: Date, against date: Date) -> Bool {
         guard let maxCacheAge = Calendar(identifier: .gregorian).date(byAdding: .day, value: maxCacheAgeInDays, to: timestamp) else {
             return false
         }
-        return currentDate < maxCacheAge
+        return date < maxCacheAge
     }
 }
 
 public final class LocalFeedLoader {
     
     private let store: FeedStore
-    private let cachePolicy: FeedCachePolicy
+    private let cachePolicy = FeedCachePolicy()
     private let currentDate: Date
     
     public init(store: FeedStore, currentDate: Date) {
         self.store = store
         self.currentDate = currentDate
-        cachePolicy = FeedCachePolicy(currentDate: currentDate)
     }
     
     public func validateCache() {
@@ -43,7 +37,7 @@ public final class LocalFeedLoader {
             switch result {
             case .failure:
                 self.store.deleteCachedFeed { _ in }
-            case let .found(_, timestamp) where !self.cachePolicy.validate(timestamp):
+            case let .found(_, timestamp) where !self.cachePolicy.validate(timestamp, against: self.currentDate):
                 self.store.deleteCachedFeed { _ in }
             default:
                 break
@@ -85,7 +79,7 @@ extension LocalFeedLoader: FeedLoader {
             switch result {
             case let .failure(error):
                 completion(.failure(error))
-            case let .found(localFeed, timestamp) where self.cachePolicy.validate(timestamp):
+            case let .found(localFeed, timestamp) where self.cachePolicy.validate(timestamp, against: self.currentDate):
                 completion(.success(localFeed.toFeedImages()))
             case .found, .empty:
                 completion(.success([]))
