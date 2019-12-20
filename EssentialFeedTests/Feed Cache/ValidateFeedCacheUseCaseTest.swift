@@ -11,8 +11,6 @@ import EssentialFeed
 
 class ValidateFeedCacheUseCaseTest: XCTestCase {
     
-    let cacheMaxAge = 7 // This should be the same value as `maxCacheAgeInDays` in `FeedCachPolicy`
-
     func test_init_doesNotMessageStoreUponCreation() {
         let (_, store) = makeSUT()
         

@@ -9,6 +9,8 @@
 import Foundation
 import EssentialFeed
 
+let cacheMaxAge = 7 // This should be the same value as `maxCacheAgeInDays` in `FeedCachPolicy`
+
 func uniqueImage() -> FeedImage {
     return FeedImage(
         id: UUID(),
