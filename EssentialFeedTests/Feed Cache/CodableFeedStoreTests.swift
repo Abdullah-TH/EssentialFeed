@@ -9,7 +9,7 @@
 import XCTest
 import EssentialFeed
 
-class CodableFeedStore {
+class CodableFeedStore: FeedStore {
     
     private struct Cache: Codable {
         let feed: [CodableFeedImage]
@@ -49,7 +49,7 @@ class CodableFeedStore {
         self.storeURL = storeURL
     }
     
-    func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
+    func retrieveCachedFeed(completion: @escaping RetrievalCompletion) {
         guard let data = try? Data(contentsOf: storeURL) else {
             completion(.empty)
             return
@@ -64,7 +64,7 @@ class CodableFeedStore {
         }
     }
     
-    func insert(_ feed: [LocalFeedImage], currentDate: Date, completion: @escaping FeedStore.InsertionCompletion) {
+    func insert(feed: [LocalFeedImage], currentDate: Date, completion: @escaping InsertionCompletion) {
         do {
             let encoder = JSONEncoder()
             let codableFeed = feed.map(CodableFeedImage.init)
@@ -77,7 +77,7 @@ class CodableFeedStore {
         }
     }
     
-    func delete(completion: @escaping FeedStore.DeletionCompletion) {
+    func deleteCachedFeed(completion: @escaping DeletionCompletion) {
         do {
             if FileManager.default.fileExists(atPath: storeURL.path) {
                 try FileManager.default.removeItem(at: storeURL)
@@ -171,7 +171,7 @@ class CodableFeedStoreTests: XCTestCase {
         let timestamp = Date()
         
         let exp = expectation(description: "wait for cache insertion")
-        sut.insert(feed.localImageFeed, currentDate: timestamp) { insertionError in
+        sut.insert(feed: feed.localImageFeed, currentDate: timestamp) { insertionError in
             XCTAssertNotNil(insertionError, "Expected cache insertion to fail with an error")
             exp.fulfill()
         }
@@ -230,7 +230,7 @@ class CodableFeedStoreTests: XCTestCase {
     ) {
         let exp = expectation(description: "Wait for cache retrival")
         
-        sut.retrieve { retrievedResult in
+        sut.retrieveCachedFeed { retrievedResult in
             switch (expectedResult, retrievedResult) {
             case (.empty, .empty), (.failure, .failure):
                 break
@@ -263,7 +263,7 @@ class CodableFeedStoreTests: XCTestCase {
     ) -> Error? {
         let exp = expectation(description: "wait for cache insertion")
         var recievedError: Error?
-        sut.insert(cache.feed, currentDate: cache.timestamp) { insertionError in
+        sut.insert(feed: cache.feed, currentDate: cache.timestamp) { insertionError in
             recievedError = insertionError
             exp.fulfill()
         }
@@ -274,7 +274,7 @@ class CodableFeedStoreTests: XCTestCase {
     private func deleteCache(from sut: CodableFeedStore) -> Error? {
         let exp = expectation(description: "Wait for cache deletion")
         var recievedError: Error?
-        sut.delete { deletionError in
+        sut.deleteCachedFeed { deletionError in
             recievedError = deletionError
             exp.fulfill()
         }

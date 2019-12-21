@@ -19,7 +19,7 @@ public final class LocalFeedLoader {
     }
     
     public func validateCache() {
-        store.retrieve { [weak self] result in
+        store.retrieveCachedFeed { [weak self] result in
             guard let self = self else { return }
             switch result {
             case .failure:
@@ -49,7 +49,7 @@ extension LocalFeedLoader {
     }
     
     private func cache(feed: [FeedImage], with completion: @escaping (Error?) -> Void) {
-        store.insert(feed.toLocalFeedImages(), currentDate: self.currentDate) { [weak self] error in
+        store.insert(feed: feed.toLocalFeedImages(), currentDate: self.currentDate) { [weak self] error in
             guard self != nil else { return }
             completion(error)
         }
@@ -61,7 +61,7 @@ extension LocalFeedLoader: FeedLoader {
     public typealias LoadResult = LoadFeedResult
     
     public func load(completion: @escaping (LoadResult) -> Void) {
-        store.retrieve { [weak self] result in
+        store.retrieveCachedFeed { [weak self] result in
             guard let self = self else { return }
             switch result {
             case let .failure(error):
