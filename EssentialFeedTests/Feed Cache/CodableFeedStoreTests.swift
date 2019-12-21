@@ -79,7 +79,7 @@ class CodableFeedStoreTests: XCTestCase {
     }
 
     func test_retrieve_deliversEmptyOnEmptyCache() {
-        let sut = CodableFeedStore()
+        let sut = makeSUT()
         let exp = expectation(description: "wait for cache retrieval")
         
         sut.retrieve { result in
@@ -97,7 +97,7 @@ class CodableFeedStoreTests: XCTestCase {
     }
     
     func test_retrieveTwice_deliversEmptyOnEmptyCacheWithNoSideEffects() {
-        let sut = CodableFeedStore()
+        let sut = makeSUT()
         let exp = expectation(description: "wait for cache retrieval")
         
         sut.retrieve { firstResult in
@@ -117,7 +117,7 @@ class CodableFeedStoreTests: XCTestCase {
     }
     
     func test_retrieveAfterInsertingToEmptyCache_deliversInsertedValues() {
-        let sut = CodableFeedStore()
+        let sut = makeSUT()
         let feed = uniqueImageFeed().localImageFeed
         let timestamp = Date()
         let exp = expectation(description: "wait for cache retrieval")
@@ -141,6 +141,10 @@ class CodableFeedStoreTests: XCTestCase {
     }
     
     // MARK: - Helpers
+    
+    private func makeSUT() -> CodableFeedStore {
+        return CodableFeedStore()
+    }
     
     private func removeArtifacts() {
         let storeURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent("image-feed.store")
