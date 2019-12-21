@@ -9,6 +9,37 @@
 import XCTest
 import EssentialFeed
 
+protocol FeedStoreSpecs {
+    
+    func test_retrieve_deliversEmptyOnEmptyCache()
+    func test_retrieveTwice_deliversEmptyOnEmptyCacheWithNoSideEffects()
+    func test_retrieve_deliversFoundValuesOnNonEmptyCache()
+    func test_retrieve_hasNoSideEffectsOnNonEmptyCache()
+
+    func test_insert_overridesPreviouslyInsertedCacheValues()
+
+    func test_delete_hasNoSideEffectOnEmptyCache()
+    func test_delete_emptiesPreviouslyInsertedCache()
+
+    func test_storeSideEffects_runSerially()
+}
+
+protocol FailableRetrieveFeedStoreSpecs {
+    func test_retrive_deliversFailureOnRetrivalError()
+    func test_retrive_hasNoSideEffectsOnFailure()
+}
+
+protocol FailableInsertFeedStoreSpecs {
+    func test_insert_deliversErrorOnInsertionError()
+    func test_insert_hasNoSideEffectOnInsertionError()
+}
+
+protocol FailableDeleteFeedStoreSpecs {
+    func test_delete_deliversErrorOnDeletionError()
+}
+
+typealias FailableFeedStore = FailableRetrieveFeedStoreSpecs & FailableInsertFeedStoreSpecs & FailableDeleteFeedStoreSpecs
+
 class CodableFeedStoreTests: XCTestCase {
     
     override func setUp() {
@@ -67,19 +98,22 @@ class CodableFeedStoreTests: XCTestCase {
         expect(sut, toRetrieveTwice: .failure(anyNSError()))
     }
     
+    func test_insert_deliversNoErrorOnEmptyCache() {
+        let sut = makeSUT()
+        let insertionError = insert(cache: (uniqueImageFeed().localImageFeed, Date()), to: sut)
+        XCTAssertNil(insertionError, "Expected successful insertion")
+    }
+    
     func test_insert_overridesPreviouslyInsertedCacheValues() {
         let sut = makeSUT()
+        
         let feed = uniqueImageFeed()
         let timestamp = Date()
-        
-        let insertionError = insert(cache: (feed.localImageFeed, timestamp), to: sut)
-        XCTAssertNil(insertionError, "Expected successful insertion")
+        insert(cache: (feed.localImageFeed, timestamp), to: sut)
         
         let latestFeed = uniqueImageFeed()
         let latestTimestamp = Date()
-        
-        let latestInsertionError = insert(cache: (latestFeed.localImageFeed, latestTimestamp), to: sut)
-        XCTAssertNil(latestInsertionError, "Expected successful insertion")
+        insert(cache: (latestFeed.localImageFeed, latestTimestamp), to: sut)
         
         expect(sut, toRetrieve: .found(feed: latestFeed.localImageFeed, timestamp: latestTimestamp))
     }
@@ -90,21 +124,42 @@ class CodableFeedStoreTests: XCTestCase {
         let feed = uniqueImageFeed()
         let timestamp = Date()
         
-        let exp = expectation(description: "wait for cache insertion")
-        sut.insert(feed: feed.localImageFeed, currentDate: timestamp) { insertionError in
-            XCTAssertNotNil(insertionError, "Expected cache insertion to fail with an error")
-            exp.fulfill()
-        }
-        wait(for: [exp], timeout: 1.0)
+        let insertionError = insert(cache: (feed.localImageFeed, timestamp), to: sut)
+        XCTAssertNotNil(insertionError, "Expected cache insertion to fail with an error")
     }
+    
+    func test_insert_hasNoSideEffectOnInsertionError() {
+        let invalidStoreURL = URL(string: "invalid://store-url")
+        let sut = makeSUT(storeURL: invalidStoreURL)
+        let feed = uniqueImageFeed()
+        let timestamp = Date()
+        
+        insert(cache: (feed.localImageFeed, timestamp), to: sut)
+        
+        expect(sut, toRetrieve: .empty)
+    }
+    
+    func test_delete_deliversNoErrorOnEmptyCache() {
+         let sut = makeSUT()
+         let deletionError = deleteCache(from: sut)
+         XCTAssertNil(deletionError, "Expected empty cache deletion to succeed")
+     }
     
     func test_delete_hasNoSideEffectOnEmptyCache() {
         let sut = makeSUT()
+        deleteCache(from: sut)
+        expect(sut, toRetrieve: .empty)
+    }
+    
+    func test_delete_deliversNoErrorOnNonEmptyCache() {
+        let sut = makeSUT()
+        let feed = uniqueImageFeed()
+        let timestamp = Date()
+        
+        insert(cache: (feed.localImageFeed, timestamp), to: sut)
         
         let deletionError = deleteCache(from: sut)
-        XCTAssertNil(deletionError, "Expected deletion to succeed")
-        
-        expect(sut, toRetrieve: .empty)
+        XCTAssertNil(deletionError, "Expected successful deletion")
     }
     
     func test_delete_emptiesPreviouslyInsertedCache() {
@@ -112,11 +167,8 @@ class CodableFeedStoreTests: XCTestCase {
         let feed = uniqueImageFeed()
         let timestamp = Date()
         
-        let insertionError = insert(cache: (feed.localImageFeed, timestamp), to: sut)
-        XCTAssertNil(insertionError, "Expect insertion to succeed")
-        
-        let deletionError = deleteCache(from: sut)
-        XCTAssertNil(deletionError, "Expected deletion to succeed")
+        insert(cache: (feed.localImageFeed, timestamp), to: sut)
+        deleteCache(from: sut)
                 
         expect(sut, toRetrieve: .empty)
     }
@@ -127,6 +179,15 @@ class CodableFeedStoreTests: XCTestCase {
         
         let deletionError = deleteCache(from: sut)
         XCTAssertNotNil(deletionError, "Expected cache deletion to fail")
+        expect(sut, toRetrieve: .empty)
+    }
+    
+    func test_delete_hasNoSideEffectsOnDeletionError() {
+        let noDeletePermissionURL = cachesDirectory()
+        let sut = makeSUT(storeURL: noDeletePermissionURL)
+        
+        deleteCache(from: sut)
+        
         expect(sut, toRetrieve: .empty)
     }
     
@@ -204,6 +265,7 @@ class CodableFeedStoreTests: XCTestCase {
         expect(sut, toRetrieve: expectedResult)
     }
     
+    @discardableResult
     private func insert(
         cache: (feed: [LocalFeedImage], timestamp: Date),
         to sut: FeedStore
@@ -218,6 +280,7 @@ class CodableFeedStoreTests: XCTestCase {
         return recievedError
     }
     
+    @discardableResult
     private func deleteCache(from sut: FeedStore) -> Error? {
         let exp = expectation(description: "Wait for cache deletion")
         var recievedError: Error?
