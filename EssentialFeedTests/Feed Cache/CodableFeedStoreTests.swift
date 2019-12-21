@@ -65,12 +65,16 @@ class CodableFeedStore {
     }
     
     func insert(_ feed: [LocalFeedImage], currentDate: Date, completion: @escaping FeedStore.InsertionCompletion) {
-        let encoder = JSONEncoder()
-        let codableFeed = feed.map(CodableFeedImage.init)
-        let cache = Cache(feed: codableFeed, timestamp: currentDate)
-        let encodedData = try! encoder.encode(cache)
-        try! encodedData.write(to: storeURL)
-        completion(nil)
+        do {
+            let encoder = JSONEncoder()
+            let codableFeed = feed.map(CodableFeedImage.init)
+            let cache = Cache(feed: codableFeed, timestamp: currentDate)
+            let encodedData = try! encoder.encode(cache)
+            try encodedData.write(to: storeURL)
+            completion(nil)
+        } catch {
+            completion(error)
+        }
     }
 }
 
@@ -145,6 +149,20 @@ class CodableFeedStoreTests: XCTestCase {
         expect(sut, toRetrieve: .found(feed: latestFeed.localImageFeed, timestamp: latestTimestamp))
     }
     
+    func test_insert_deliversErrorOnInsertionError() {
+        let invalidStoreURL = URL(string: "invalid://store-url")
+        let sut = makeSUT(storeURL: invalidStoreURL)
+        let feed = uniqueImageFeed()
+        let timestamp = Date()
+        
+        let exp = expectation(description: "wait for cache insertion")
+        sut.insert(feed.localImageFeed, currentDate: timestamp) { insertionError in
+            XCTAssertNotNil(insertionError, "Expected cache insertion to fail with an error")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
+    
     // MARK: - Helpers
     
     private func makeSUT(
@@ -200,7 +218,7 @@ class CodableFeedStoreTests: XCTestCase {
     ) {
         let exp = expectation(description: "wait for cache insertion")
         sut.insert(cache.feed, currentDate: cache.timestamp) { insertionError in
-            XCTAssertNil(insertionError, "Expected feed to be inserted successfully")
+            XCTAssertNil(insertionError, "Expected feed to be inserted successfully", file: file, line: line)
             exp.fulfill()
         }
         wait(for: [exp], timeout: 1.0)
