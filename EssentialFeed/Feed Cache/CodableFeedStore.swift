@@ -42,7 +42,7 @@ public class CodableFeedStore: FeedStore {
         }
     }
     
-    private let storeURL: URL
+    let storeURL: URL
     private let queue = DispatchQueue(label: "\(CodableFeedStore.self)Queue", qos: .userInitiated, attributes: .concurrent)
     
     public init(storeURL: URL) {
