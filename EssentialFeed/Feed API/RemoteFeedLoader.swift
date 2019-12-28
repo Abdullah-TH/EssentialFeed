@@ -13,7 +13,7 @@ public class RemoteFeedLoader: FeedLoader {
     private let client: HTTPClient
     private let url: URL
     
-    public typealias Result = LoadFeedResult
+    public typealias Result = FeedLoader.Result
     
     public enum Error: Swift.Error {
         case connectivityError
