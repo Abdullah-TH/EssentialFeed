@@ -287,9 +287,9 @@
 		6AD6B0232338EF21004C9471 /* Feed API */ = {
 			isa = PBXGroup;
 			children = (
+				6ADA9E662349531A00C8F98C /* Helpers */,
 				6A91BE9D22FA8DE200B37187 /* LoadFeedFromRemoteUseCaseTests.swift */,
 				6AD6B024233C2FED004C9471 /* URLSessionHTTPClientTests.swift */,
-				6ADA9E662349531A00C8F98C /* Helpers */,
 			);
 			path = "Feed API";
 			sourceTree = "<group>";
