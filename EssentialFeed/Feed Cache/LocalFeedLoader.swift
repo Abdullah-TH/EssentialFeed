@@ -24,7 +24,7 @@ public final class LocalFeedLoader {
             switch result {
             case .failure:
                 self.store.deleteCachedFeed { _ in }
-            case .success(.found(_, let timestamp)) where !FeedCachePolicy.validate(timestamp, against: self.currentDate):
+            case .success(.some(let cachedFeed)) where !FeedCachePolicy.validate(cachedFeed.timestamp, against: self.currentDate):
                 self.store.deleteCachedFeed { _ in }
             default:
                 break
@@ -66,8 +66,8 @@ extension LocalFeedLoader: FeedLoader {
             switch result {
             case let .failure(error):
                 completion(.failure(error))
-            case .success(.found(let localFeed, let timestamp)) where FeedCachePolicy.validate(timestamp, against: self.currentDate):
-                completion(.success(localFeed.toFeedImages()))
+            case let .success(.some(cachedFeed)) where FeedCachePolicy.validate(cachedFeed.timestamp, against: self.currentDate):
+                completion(.success(cachedFeed.feed.toFeedImages()))
             case .success:
                 completion(.success([]))
             }

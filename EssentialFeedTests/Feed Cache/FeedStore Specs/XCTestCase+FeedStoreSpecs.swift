@@ -12,11 +12,11 @@ import EssentialFeed
 extension FeedStoreSpecs where Self: XCTestCase {
     
     func assertThatRetrieveDeliversEmptyOnEmptyCache(on sut: FeedStore) {
-        expect(sut, toRetrieve: .success(.empty))
+        expect(sut, toRetrieve: .success(.none))
     }
     
     func assertThatRetrieveTwiceDeliversEmptyOnEmptyCachWithNoSideEffects(on sut: FeedStore) {
-        expect(sut, toRetrieveTwice: .success(.empty))
+        expect(sut, toRetrieveTwice: .success(.none))
     }
     
     func assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on sut: FeedStore) {
@@ -25,7 +25,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
         
         let insertionError = insert(cache: (feed, timestamp), to: sut)
         XCTAssertNil(insertionError, "Expected successful insertion")
-        expect(sut, toRetrieve: .success(.found(feed: feed, timestamp: timestamp)))
+        expect(sut, toRetrieve: .success(.some((feed: feed, timestamp: timestamp))))
     }
     
     func assertThatRetrieveHasNoSideEffectsOnNonEmptyCache(on sut: FeedStore) {
@@ -34,7 +34,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
         
         let insertionError = insert(cache: (feed, timestamp), to: sut)
         XCTAssertNil(insertionError, "Expected successful insertion")
-        expect(sut, toRetrieveTwice: .success(.found(feed: feed, timestamp: timestamp)))
+        expect(sut, toRetrieveTwice: .success(.some((feed: feed, timestamp: timestamp))))
     }
     
     func assertThatInsertDeliversNoErrorOnEmptyCache(on sut: FeedStore) {
@@ -51,7 +51,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
         let latestTimestamp = Date()
         insert(cache: (latestFeed.localImageFeed, latestTimestamp), to: sut)
         
-        expect(sut, toRetrieve: .success(.found(feed: latestFeed.localImageFeed, timestamp: latestTimestamp)))
+        expect(sut, toRetrieve: .success(.some((feed: latestFeed.localImageFeed, timestamp: latestTimestamp))))
     }
     
     func assertThatDeleteDeliversNoErrorOnEmptyCache(on sut: FeedStore) {
@@ -61,7 +61,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
     
     func assertThatDeleteHasNoSideEffectOnEmptyCache(on sut: FeedStore) {
         deleteCache(from: sut)
-        expect(sut, toRetrieve: .success(.empty))
+        expect(sut, toRetrieve: .success(.none))
     }
     
     func assertThatDeleteDeliversNoErrorOnNonEmptyCache(on sut: FeedStore) {
@@ -81,7 +81,7 @@ extension FeedStoreSpecs where Self: XCTestCase {
         insert(cache: (feed.localImageFeed, timestamp), to: sut)
         deleteCache(from: sut)
                 
-        expect(sut, toRetrieve: .success(.empty))
+        expect(sut, toRetrieve: .success(.none))
     }
     
     func assertThatStoreSideEffecsRunSerially(on sut: FeedStore) {
@@ -126,9 +126,9 @@ extension FeedStoreSpecs where Self: XCTestCase {
         
         sut.retrieveCachedFeed { retrievedResult in
             switch (expectedResult, retrievedResult) {
-            case (.success(.empty), .success(.empty)), (.failure, .failure):
+            case (.success(.none), .success(.none)), (.failure, .failure):
                 break
-            case let (.success(.found(expected)), .success(.found(retrieved))):
+            case let (.success(.some((expected))), .success(.some(retrieved))):
                 XCTAssertEqual(expected.feed, retrieved.feed, file: file, line: line)
                 XCTAssertEqual(expected.timestamp, retrieved.timestamp, file: file, line: line)
                 
