@@ -123,13 +123,13 @@ class CacheFeedUseCaseTests: XCTestCase {
         when action: () -> ()
     ) {
         let exp = expectation(description: "Wait for save completion")
-        var recievedResults = [LocalFeedLoader.SaveResult]()
-        sut.save([uniqueImage()]) { error in
-            recievedResults.append(error)
+        var receivedError: Error?
+        sut.save([uniqueImage()]) { saveResult in
+            if case let Result.failure(error) = saveResult { receivedError = error }
             exp.fulfill()
         }
         action()
-        XCTAssertEqual(recievedResults.map { $0 as NSError? }, [expectedError], file: file, line: line)
+        XCTAssertEqual(receivedError as NSError?, expectedError, file: file, line: line)
         wait(for: [exp], timeout: 1.0)
     }
 }

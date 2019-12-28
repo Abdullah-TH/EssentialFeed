@@ -74,9 +74,9 @@ public class CodableFeedStore: FeedStore {
                 let cache = Cache(feed: codableFeed, timestamp: currentDate)
                 let encodedData = try! encoder.encode(cache)
                 try encodedData.write(to: storeURL)
-                completion(nil)
+                completion(.success(()))
             } catch {
-                completion(error)
+                completion(.failure(error))
             }
         }
     }
@@ -87,9 +87,9 @@ public class CodableFeedStore: FeedStore {
                 if FileManager.default.fileExists(atPath: storeURL.path) {
                     try FileManager.default.removeItem(at: storeURL)
                 }
-                completion(nil)
+                completion(.success(()))
             } catch {
-                completion(error)
+                completion(.failure(error))
             }
         }
     }
