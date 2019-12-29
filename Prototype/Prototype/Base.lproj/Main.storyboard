@@ -25,7 +25,7 @@
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         </view>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="FeedImageCell" rowHeight="580" id="Rv1-wh-urE">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="FeedImageCell" rowHeight="580" id="Rv1-wh-urE" customClass="FeedImageCell" customModule="Prototype" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="44" width="414" height="580"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Rv1-wh-urE" id="avi-WO-WIT">
@@ -106,6 +106,12 @@ Location</string>
                                         <constraint firstAttribute="bottomMargin" secondItem="5Wx-bO-F1W" secondAttribute="bottom" priority="999" constant="6" id="rYe-om-DE6"/>
                                     </constraints>
                                 </tableViewCellContentView>
+                                <connections>
+                                    <outlet property="descriptionLabel" destination="u2I-Jh-gIO" id="W6y-C0-xzc"/>
+                                    <outlet property="feedImageView" destination="B4n-uN-voG" id="a7K-2L-R4q"/>
+                                    <outlet property="locationContainer" destination="PQG-fn-49t" id="Rqz-4m-yEj"/>
+                                    <outlet property="locationLabel" destination="1Aj-fb-wXs" id="xWn-nO-Oj8"/>
+                                </connections>
                             </tableViewCell>
                         </prototypes>
                         <connections>
