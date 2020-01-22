@@ -55,7 +55,7 @@ class FeedViewControllerTests: XCTestCase {
         loader.completeFeedLoading(with: [], at: 0)
         XCTAssertFalse(
             sut.isShowingLoadingIndicator,
-            "Expected to hide loading indicator once the loading is completed"
+            "Expected to hide loading indicator once the loading completes successfully"
         )
         
         sut.simulateUserInitiatedFeedReload()
@@ -65,10 +65,10 @@ class FeedViewControllerTests: XCTestCase {
         )
         
         sut.simulateUserInitiatedFeedReload()
-        loader.completeFeedLoading(with: [], at: 1)
+        loader.completeFeedLoadingWithError(at: 1)
         XCTAssertFalse(
             sut.isShowingLoadingIndicator,
-            "Expected to hide loading indicator once user initiated loading completed"
+            "Expected to hide loading indicator once user initiated loading completes with error"
         )
     }
     
