@@ -96,6 +96,19 @@ class FeedViewControllerTests: XCTestCase {
         assertThat(sut, hasViewConfiguredFor: image3, at: 3)
     }
     
+    func test_loadFeedCompletion_doesNotAlterCurrentRenderingStateOnError() {
+        let image0 = makeImage()
+        let (sut, loader) = makeSUT()
+        
+        sut.loadViewIfNeeded()
+        loader.completeFeedLoading(with: [image0], at: 0)
+        assertThat(sut, isRendering: [image0])
+        
+        sut.simulateUserInitiatedFeedReload()
+        loader.completeFeedLoadingWithError(at: 1)
+        assertThat(sut, isRendering: [image0])
+    }
+    
     // MARK: - Helper
     
     private func makeSUT(
@@ -128,12 +141,14 @@ class FeedViewControllerTests: XCTestCase {
         file: StaticString = #file,
         line: UInt = #line
     ) {
+        continueAfterFailure = false
         XCTAssertEqual(
             sut.numberOfRenderedFeedImageViews,
             feed.count,
             file: file,
             line: line
         )
+        continueAfterFailure = true
         
         feed.enumerated().forEach { index, image in
             assertThat(
@@ -202,6 +217,11 @@ class FeedViewControllerTests: XCTestCase {
         
         func completeFeedLoading(with feed: [FeedImage], at index: Int) {
             completions[index](.success(feed))
+        }
+        
+        func completeFeedLoadingWithError(at index: Int) {
+            let error = NSError(domain: "any error", code: 0)
+            completions[index](.failure(error))
         }
     }
 }
