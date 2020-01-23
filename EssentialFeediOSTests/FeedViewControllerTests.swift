@@ -316,6 +316,45 @@ class FeedViewControllerTests: XCTestCase {
         
     }
     
+    func test_feedImageRetryAction_retriesImageLoad() {
+        let image0 = makeImage(url: URL(string: "http://url-0.com")!)
+        let image1 = makeImage(url: URL(string: "http://url-1.com")!)
+        let (sut, loader) = makeSUT()
+        
+        sut.loadViewIfNeeded()
+        loader.completeFeedLoading(with: [image0, image1], at: 0)
+        
+        let view0 = sut.simulateFeedImageViewVisible(at: 0)
+        let view1 = sut.simulateFeedImageViewVisible(at: 1)
+        XCTAssertEqual(
+            loader.loadedImageURLs,
+            [image0.url, image1.url],
+            "Expected two image url requests for the two visible views"
+        )
+        
+        loader.completeImageLoadingWithError(at: 0)
+        loader.completeImageLoadingWithError(at: 1)
+        XCTAssertEqual(
+            loader.loadedImageURLs,
+            [image0.url, image1.url],
+            "Expected only two image url requests before the retry action"
+        )
+        
+        view0?.simulateRetryAction()
+        XCTAssertEqual(
+            loader.loadedImageURLs,
+            [image0.url, image1.url, image0.url],
+            "Expected third image url request after first view retry action"
+        )
+        
+        view1?.simulateRetryAction()
+        XCTAssertEqual(
+            loader.loadedImageURLs,
+            [image0.url, image1.url, image0.url, image1.url],
+            "Expected fourth image url request after second view retry action"
+        )
+    }
+    
     // MARK: - Helper
     
     private func makeSUT(
@@ -532,6 +571,10 @@ private extension FeedImageCell {
     var renderedImage: Data? {
         return feedImageView.image?.pngData()
     }
+    
+    func simulateRetryAction() {
+        feedImageRetryButton.simulateTap()
+    }
 }
 
 private extension UIRefreshControl {
@@ -548,7 +591,19 @@ private extension UIRefreshControl {
     }
 }
 
+private extension UIButton {
+    
+    func simulateTap() {
+        allTargets.forEach { target in
+            actions(forTarget: target, forControlEvent: .touchUpInside)?.forEach { action in
+                (target as NSObject).perform(Selector(action))
+            }
+        }
+    }
+}
+
 private extension UIImage {
+    
     static func make(withColor color: UIColor) -> UIImage {
         let rect = CGRect(x: 0, y: 0, width: 1, height: 1)
         UIGraphicsBeginImageContext(rect.size)
