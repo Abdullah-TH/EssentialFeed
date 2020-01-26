@@ -13,7 +13,11 @@ public class FeedViewController: UITableViewController, UITableViewDataSourcePre
     
     private let refreshController: FeedRefreshViewController
     
-    var cellControllers = [FeedImageCellController]()
+    var cellControllers = [FeedImageCellController]() {
+        didSet {
+            tableView.reloadData()
+        }
+    }
     
     init(refreshController: FeedRefreshViewController) {
         self.refreshController = refreshController
