@@ -6,6 +6,7 @@
 //  Copyright © 2020 AbdullahTH. All rights reserved.
 //
 
+import UIKit
 import EssentialFeed
 
 public final class FeedUIComposer {
@@ -35,7 +36,7 @@ public final class FeedUIComposer {
         
         return { [weak controller] feed in
             controller?.cellControllers = feed.map { model in
-                let viewModel = FeedImageViewModel(model: model, imageLoader: imageLoader)
+                let viewModel = FeedImageViewModel(model: model, imageLoader: imageLoader, imageTransformer: UIImage.init)
                 return FeedImageCellController(viewModel: viewModel)
             }
         }
