@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import EssentialFeed
 
 final class FeedImageCellController {
     
