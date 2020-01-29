@@ -18,17 +18,22 @@ public final class FeedUIComposer {
         imageLoader: FeedImageDataLoader
     ) -> FeedViewController {
         
-        let feedPresenter = FeedPresenter()
         let feedLoaderPresentationAdapter = FeedLoaderPresentationAdapter(
-            feedLoader: feedLoader,
-            presenter: feedPresenter
+            feedLoader: feedLoader
         )
+        
         let refreshController = FeedRefreshViewController(
             delegate: feedLoaderPresentationAdapter
         )
-        feedPresenter.feedLoadingView = WeakRefrenceVirtualProxy(refreshController)
+        
         let feedViewController = FeedViewController(refreshController: refreshController)
-        feedPresenter.feedView = FeedViewAdapter(controller: feedViewController, imageLoader: imageLoader)
+        
+        let feedPresenter = FeedPresenter(
+            feedLoadingView: WeakRefrenceVirtualProxy(refreshController),
+            feedView: FeedViewAdapter(controller: feedViewController, imageLoader: imageLoader)
+        )
+        
+        feedLoaderPresentationAdapter.presenter = feedPresenter
         
         return feedViewController
     }
@@ -70,22 +75,21 @@ private final class FeedViewAdapter: FeedView {
 private final class FeedLoaderPresentationAdapter: FeedRefreshViewControllerDelegate {
     
     private let feedLoader: FeedLoader
-    private let presenter: FeedPresenter
+    var presenter: FeedPresenter?
     
-    init(feedLoader: FeedLoader, presenter: FeedPresenter) {
+    init(feedLoader: FeedLoader) {
         self.feedLoader = feedLoader
-        self.presenter = presenter
     }
     
     func didRequestFeedRefresh() {
-        presenter.didStartLoadingFeed()
+        presenter?.didStartLoadingFeed()
         
         feedLoader.load { [weak self] result in
             switch result {
             case let .success(feed):
-                self?.presenter.didFinishLoadingWith(feed: feed)
+                self?.presenter?.didFinishLoadingWith(feed: feed)
             case let .failure(error):
-                self?.presenter.didFinishLoadingWith(error: error)
+                self?.presenter?.didFinishLoadingWith(error: error)
             }
         }
     }
