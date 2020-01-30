@@ -20,7 +20,7 @@ public class FeedViewController: UITableViewController, UITableViewDataSourcePre
     
     init(refreshController: FeedRefreshViewController) {
         self.refreshController = refreshController
-        super.init(style: .plain)
+        super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
