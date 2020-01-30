@@ -35,7 +35,7 @@ public class FeedViewController: UITableViewController, UITableViewDataSourcePre
     
     private func setupTableView() {
         tableView.prefetchDataSource = self
-        tableView.register(UINib(nibName: "FeedImageCell", bundle: nil), forCellReuseIdentifier: "FeedImageCell")
+        tableView.register(UINib(nibName: "FeedImageCell", bundle: Bundle(for: FeedViewController.self)), forCellReuseIdentifier: "FeedImageCell")
     }
     
     private func setupRefreshController() {
