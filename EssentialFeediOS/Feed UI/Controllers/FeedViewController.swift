@@ -35,6 +35,7 @@ public class FeedViewController: UITableViewController, UITableViewDataSourcePre
     
     private func setupTableView() {
         tableView.prefetchDataSource = self
+        tableView.register(UINib(nibName: "FeedImageCell", bundle: nil), forCellReuseIdentifier: "FeedImageCell")
     }
     
     private func setupRefreshController() {
@@ -47,7 +48,7 @@ public class FeedViewController: UITableViewController, UITableViewDataSourcePre
     }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return cellController(forRowAt: indexPath).cellView()
+        return cellController(forRowAt: indexPath).cellView(in: tableView)
     }
     
     public override func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -56,7 +57,7 @@ public class FeedViewController: UITableViewController, UITableViewDataSourcePre
     
     public func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
         indexPaths.forEach { indexPath in
-            _ = cellController(forRowAt: indexPath).cellView()
+            cellController(forRowAt: indexPath).preload()
         }
     }
     
